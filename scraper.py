@@ -16,7 +16,7 @@ Each trade dict returned:
     "value":       float, # approximate USD value disclosed
     "price":       float, # price at time of trade
     "trade_date":  str,   # ISO date  e.g. "2026-05-18"
-    "filed_date":  str,   # ISO datetime when disclosure was published
+    "filed_date":  str,   # ISO date when disclosure was published
     "asset_type":  str,   # "stock" | "etf" | "option" | "other"
     "country":     str,
   }
@@ -25,12 +25,12 @@ Each trade dict returned:
 import hashlib
 import json
 import logging
-import re
 import time
+from datetime import datetime, timedelta, timezone
 
 import requests
 
-from config import TRADES_URL, TARGET_POLITICIAN_ID, TARGET_POLITICIAN_DISPLAY
+from config import TRADES_URL, TARGET_POLITICIAN_ID, TARGET_POLITICIAN_DISPLAY, LOOKBACK_DAYS
 
 logger = logging.getLogger("scraper")
 
@@ -51,18 +51,14 @@ def _make_id(tx_id: int) -> str:
     return hashlib.md5(str(tx_id).encode()).hexdigest()
 
 
-def _extract_trades_from_rsc(rsc_text: str) -> list[dict]:
+def _extract_trades_from_rsc(rsc_text: str) -> list:
     """
-    The RSC payload embeds the trade array as a JSON blob starting with
-    '[{"_issuerId":...' embedded inside a React component data attribute.
-    We locate and extract that array.
+    Extract the trade JSON array from Capitol Trades' RSC payload.
+    The array starts right after '"data":' in the React component payload.
     """
-    # Capitol Trades embeds: {"columns":"$c","data":[{...trades...}]}
-    # The array starts right after '"data":'
     marker = '"data":['
     idx = rsc_text.find(marker)
     if idx == -1:
-        # Fallback: look for the raw array start
         marker2 = '[{"_issuerId":'
         idx2 = rsc_text.find(marker2)
         if idx2 == -1:
@@ -72,7 +68,7 @@ def _extract_trades_from_rsc(rsc_text: str) -> list[dict]:
     else:
         start = idx + len(marker) - 1  # position of '['
 
-    # Now extract the JSON array by counting brackets
+    # Extract the JSON array by counting brackets
     depth   = 0
     in_str  = False
     escape  = False
@@ -113,7 +109,7 @@ def _normalise(raw: dict):
         politician = raw.get("politician", {})
         tx_type    = raw.get("txType", "").lower()
 
-        # Skip non-buy/sell records (receive, exchange, etc.)
+        # Only process buy/sell
         if tx_type not in ("buy", "sell"):
             return None
 
@@ -122,12 +118,15 @@ def _normalise(raw: dict):
         if not ticker:
             return None
 
-        pub_date = raw.get("pubDate", "")[:10]   # keep only YYYY-MM-DD
+        # Skip non-US stocks (Capitol Trades marks country on issuer)
+        country = issuer.get("country", "us")
+
+        pub_date = raw.get("pubDate", "")[:10]  # YYYY-MM-DD
 
         return {
-            "id":         _make_id(raw["_txId"]),
-            "tx_id":      raw["_txId"],
-            "politician": (
+            "id":          _make_id(raw["_txId"]),
+            "tx_id":       raw["_txId"],
+            "politician":  (
                 f"{politician.get('nickname') or politician.get('firstName', '')} "
                 f"{politician.get('lastName', '')}".strip()
                 or TARGET_POLITICIAN_DISPLAY
@@ -140,8 +139,8 @@ def _normalise(raw: dict):
             "price":       float(raw.get("price") or 0),
             "trade_date":  raw.get("txDate", ""),
             "filed_date":  pub_date,
-            "asset_type":  "stock",   # Capitol Trades shows stocks by default; options rare
-            "country":     issuer.get("country", "us"),
+            "asset_type":  "stock",
+            "country":     country,
         }
     except Exception as exc:
         logger.debug("Normalise failed for %s: %s", raw.get("_txId"), exc)
@@ -149,20 +148,24 @@ def _normalise(raw: dict):
 
 
 def get_recent_trades(
-    politician_id: str     = None,
+    politician_id: str      = None,
     politician_display: str = None,
-    max_pages: int = 3,
-    page_size: int = 96,
-) -> list[dict]:
+    lookback_days: int      = None,
+    max_pages: int          = 2,
+    page_size: int          = 96,
+) -> list:
     """
-    Return normalised recent trades for the target politician.
-    Deduplicates by tx_id across pages.
+    Return normalised trades filed within the last `lookback_days` days.
+    Sorted newest-first. Deduplicates by tx_id.
     """
-    politician_id     = politician_id     or TARGET_POLITICIAN_ID
+    politician_id      = politician_id      or TARGET_POLITICIAN_ID
     politician_display = politician_display or TARGET_POLITICIAN_DISPLAY
+    lookback_days      = lookback_days      or LOOKBACK_DAYS
 
-    all_trades: list[dict] = []
-    seen_ids: set[str]     = set()
+    cutoff = datetime.now(timezone.utc) - timedelta(days=lookback_days)
+
+    all_trades: list = []
+    seen_ids: set    = set()
 
     for page in range(1, max_pages + 1):
         try:
@@ -180,19 +183,38 @@ def get_recent_trades(
             raw_list = _extract_trades_from_rsc(resp.text)
 
             if not raw_list:
-                logger.info("No trade records on page %d — stopping.", page)
                 break
 
-            page_new = 0
+            page_new   = 0
+            stop_early = False
+
             for raw in raw_list:
                 trade = _normalise(raw)
-                if trade and trade["id"] not in seen_ids:
+                if not trade:
+                    continue
+
+                # Check if this trade's filed_date is within the lookback window
+                try:
+                    filed_dt = datetime.strptime(trade["filed_date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                except ValueError:
+                    filed_dt = datetime.now(timezone.utc)
+
+                if filed_dt < cutoff:
+                    # Capitol Trades returns newest-first; once we pass the cutoff, stop
+                    stop_early = True
+                    break
+
+                if trade["id"] not in seen_ids:
                     all_trades.append(trade)
                     seen_ids.add(trade["id"])
                     page_new += 1
 
-            logger.info("Page %d: %d new trades (total so far: %d)", page, page_new, len(all_trades))
-            if page_new == 0:
+            logger.info(
+                "Page %d: %d trades within last %d days (total: %d)",
+                page, page_new, lookback_days, len(all_trades),
+            )
+
+            if stop_early or page_new == 0:
                 break
 
             time.sleep(1)
@@ -201,5 +223,8 @@ def get_recent_trades(
             logger.warning("Page %d fetch failed: %s", page, exc)
             break
 
-    logger.info("Total trades fetched for %s: %d", politician_display, len(all_trades))
+    logger.info(
+        "Fetched %d trades for %s (last %d days)",
+        len(all_trades), politician_display, lookback_days,
+    )
     return all_trades

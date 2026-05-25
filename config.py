@@ -26,6 +26,11 @@ MAX_TRADE_USD   = float(os.getenv("MAX_TRADE_USD",  5000))
 # ── Scheduler ────────────────────────────────────────────────────────────────
 CHECK_INTERVAL_MINUTES = int(os.getenv("CHECK_INTERVAL_MINUTES", 30))
 
+# ── Lookback window ──────────────────────────────────────────────────────────
+# Only process trades FILED within the last N days.
+# Keeps the bot focused on genuinely new disclosures, not old history.
+LOOKBACK_DAYS = int(os.getenv("LOOKBACK_DAYS", 30))
+
 # ── Capitol Trades ───────────────────────────────────────────────────────────
 CAPITOL_TRADES_BASE  = "https://www.capitoltrades.com"
 TRADES_URL           = f"{CAPITOL_TRADES_BASE}/trades"

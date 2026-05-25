@@ -1,10 +1,12 @@
 """
 trader.py — Execute trades on Alpaca paper account.
 
-Supports:
-  - Market & limit orders for stocks
-  - Basic options contract placement (if Alpaca options enabled)
-  - Position sizing based on portfolio equity
+Key design:
+  - Uses Alpaca POSITIONS as the deduplication source of truth.
+    Since trades_db.json resets each remote run, we check whether
+    we already hold a stock before buying again.
+  - Skips non-US / OTC tickers that Alpaca can't price.
+  - Sizes orders as a fraction of portfolio equity, capped to MIN/MAX.
 """
 
 import logging
@@ -24,6 +26,30 @@ SESSION.headers.update({
     "Content-Type":        "application/json",
 })
 
+DATA_HEADERS = {
+    "APCA-API-KEY-ID":     ALPACA_KEY,
+    "APCA-API-SECRET-KEY": ALPACA_SECRET,
+}
+
+# Cache positions for the lifetime of one bot run (avoid repeated API calls)
+_positions_cache: dict = {}   # symbol -> position dict
+_positions_loaded = False
+
+
+def _load_positions():
+    global _positions_cache, _positions_loaded
+    if _positions_loaded:
+        return
+    try:
+        resp = SESSION.get(f"{ALPACA_BASE_URL}/v2/positions")
+        resp.raise_for_status()
+        for p in resp.json():
+            _positions_cache[p["symbol"].upper()] = p
+        logger.info("Loaded %d existing positions from Alpaca", len(_positions_cache))
+    except Exception as exc:
+        logger.warning("Could not load positions: %s", exc)
+    _positions_loaded = True
+
 
 # ── Account ──────────────────────────────────────────────────────────────────
 
@@ -38,59 +64,68 @@ def get_portfolio_value() -> float:
     return float(acct.get("portfolio_value") or acct.get("equity", 10_000))
 
 
-def get_positions() -> list[dict]:
+def get_positions() -> list:
     resp = SESSION.get(f"{ALPACA_BASE_URL}/v2/positions")
     resp.raise_for_status()
     return resp.json()
 
 
 def get_position(symbol: str):
-    try:
-        resp = SESSION.get(f"{ALPACA_BASE_URL}/v2/positions/{symbol}")
-        resp.raise_for_status()
-        return resp.json()
-    except requests.HTTPError as e:
-        if e.response.status_code == 404:
-            return None
-        raise
+    _load_positions()
+    return _positions_cache.get(symbol.upper())
+
+
+def already_holding(symbol: str) -> bool:
+    """True if we currently have a position in this symbol."""
+    return get_position(symbol) is not None
 
 
 # ── Quote ────────────────────────────────────────────────────────────────────
 
 def get_latest_price(symbol: str):
-    """Fetch latest trade price from Alpaca market data."""
+    """Fetch latest trade price. Returns None if symbol not found on Alpaca."""
     try:
-        resp = SESSION.get(
+        resp = requests.get(
             f"https://data.alpaca.markets/v2/stocks/{symbol}/trades/latest",
-            headers={
-                "APCA-API-KEY-ID":     ALPACA_KEY,
-                "APCA-API-SECRET-KEY": ALPACA_SECRET,
-            }
+            headers=DATA_HEADERS,
+            timeout=10,
         )
         resp.raise_for_status()
         return float(resp.json()["trade"]["p"])
+    except requests.HTTPError as e:
+        if e.response.status_code in (404, 422):
+            logger.info("Ticker %s not found on Alpaca (foreign/OTC) — skipping", symbol)
+        else:
+            logger.warning("Price fetch error for %s: %s", symbol, e)
+        return None
     except Exception as exc:
         logger.warning("Price fetch failed for %s: %s", symbol, exc)
         return None
 
 
+def is_tradeable(symbol: str) -> bool:
+    """Check if Alpaca supports trading this symbol."""
+    try:
+        resp = SESSION.get(f"{ALPACA_BASE_URL}/v2/assets/{symbol}")
+        resp.raise_for_status()
+        asset = resp.json()
+        return asset.get("tradable", False) and asset.get("status") == "active"
+    except Exception:
+        return False
+
+
 # ── Order sizing ─────────────────────────────────────────────────────────────
 
-def calculate_qty(symbol: str, politician_amount_mid: float) -> int:
+def calculate_qty(symbol: str, notional_hint: float = 0) -> int:
     """
-    Determine how many shares to buy/sell.
-    Uses TRADE_FRACTION of portfolio, capped to MIN/MAX_TRADE_USD.
-    Optionally scales proportionally to the politician's disclosed amount.
+    How many shares to buy.
+    Target = TRADE_FRACTION of portfolio, clamped to MIN/MAX_TRADE_USD.
     """
-    portfolio = get_portfolio_value()
-    target_usd = min(
-        max(portfolio * TRADE_FRACTION, MIN_TRADE_USD),
-        MAX_TRADE_USD,
-    )
+    portfolio  = get_portfolio_value()
+    target_usd = min(max(portfolio * TRADE_FRACTION, MIN_TRADE_USD), MAX_TRADE_USD)
 
     price = get_latest_price(symbol)
     if not price or price <= 0:
-        logger.warning("No price for %s — skipping", symbol)
         return 0
 
     qty = int(target_usd / price)
@@ -100,7 +135,6 @@ def calculate_qty(symbol: str, politician_amount_mid: float) -> int:
 # ── Orders ───────────────────────────────────────────────────────────────────
 
 def place_market_order(symbol: str, qty: int, side: str) -> dict:
-    """Place a market order. side = 'buy' | 'sell'."""
     payload = {
         "symbol":        symbol,
         "qty":           str(qty),
@@ -111,16 +145,15 @@ def place_market_order(symbol: str, qty: int, side: str) -> dict:
     resp = SESSION.post(f"{ALPACA_BASE_URL}/v2/orders", json=payload)
     resp.raise_for_status()
     result = resp.json()
-    logger.info("Order placed: %s %d %s — id=%s", side.upper(), qty, symbol, result.get("id"))
-    return result
-
-
-def close_position(symbol: str) -> dict:
-    """Close entire existing position in symbol."""
-    resp = SESSION.delete(f"{ALPACA_BASE_URL}/v2/positions/{symbol}")
-    resp.raise_for_status()
-    result = resp.json()
-    logger.info("Closed position: %s", symbol)
+    logger.info(
+        "Order placed: %s %d %s — Alpaca id=%s",
+        side.upper(), qty, symbol, result.get("id"),
+    )
+    # Update local cache
+    if side == "buy":
+        _positions_cache[symbol.upper()] = {"symbol": symbol, "qty": str(qty)}
+    elif side == "sell" and symbol.upper() in _positions_cache:
+        del _positions_cache[symbol.upper()]
     return result
 
 
@@ -128,31 +161,41 @@ def close_position(symbol: str) -> dict:
 
 def execute_trade(trade: dict) -> dict:
     """
-    Given a normalised trade dict from scraper.py, execute the equivalent
-    order on Alpaca.
-
-    Returns the Alpaca order result or raises on failure.
+    Execute a single trade from the scraper on Alpaca.
+    Returns order result dict, or {"status": "skipped", "reason": ...}.
     """
-    symbol     = trade["ticker"]
-    side       = trade["side"]           # "buy" | "sell"
-    asset_type = trade.get("asset_type", "stock")
-    amount_mid = float(trade.get("value") or trade.get("amount_low", 0) or 0)
+    symbol = trade["ticker"].upper()
+    side   = trade["side"]   # "buy" | "sell"
 
-    if asset_type == "option":
-        logger.info("Options trade for %s — executing as underlying stock order", symbol)
-        # Alpaca options API requires contract symbol; fall back to stock for now
-        # TODO: look up option chain and match contract
+    # ── BUY logic ────────────────────────────────────────────────────────────
+    if side == "buy":
+        # Don't double-buy if we already hold this
+        if already_holding(symbol):
+            logger.info("Already holding %s — skipping duplicate buy", symbol)
+            return {"status": "skipped", "reason": "already_holding"}
 
-    if side == "sell":
-        # Only sell if we actually hold the position
+        # Check Alpaca supports the ticker
+        price = get_latest_price(symbol)
+        if price is None:
+            return {"status": "skipped", "reason": "not_on_alpaca"}
+
+        qty = calculate_qty(symbol, trade.get("value", 0))
+        if qty == 0:
+            return {"status": "skipped", "reason": "zero_qty"}
+
+        return place_market_order(symbol, qty, "buy")
+
+    # ── SELL logic ───────────────────────────────────────────────────────────
+    elif side == "sell":
         pos = get_position(symbol)
         if not pos:
             logger.info("No position in %s to sell — skipping", symbol)
             return {"status": "skipped", "reason": "no_position"}
+
         qty = int(float(pos.get("qty", 1)))
-    else:
-        qty = calculate_qty(symbol, amount_mid)
-        if qty == 0:
+        if qty <= 0:
             return {"status": "skipped", "reason": "zero_qty"}
 
-    return place_market_order(symbol, qty, side)
+        return place_market_order(symbol, qty, "sell")
+
+    return {"status": "skipped", "reason": "unknown_side"}
