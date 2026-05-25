@@ -28,10 +28,12 @@ import time
 
 import db
 import journal
+import midday
 import notify
 import research
 import scraper
 import trader
+import weekly
 from config import (
     CHECK_INTERVAL_MINUTES,
     TARGET_POLITICIAN_ID,
@@ -236,12 +238,22 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--once",    action="store_true", help="Run one cycle and exit")
     parser.add_argument("--journal", action="store_true", help="Write today's journal and exit")
+    parser.add_argument("--midday",  action="store_true", help="Run midday scan and exit")
+    parser.add_argument("--weekly",  action="store_true", help="Write weekly review and exit")
     args = parser.parse_args()
 
     startup_check()
 
     if args.journal:
         journal.write_journal()
+        return
+
+    if args.midday:
+        midday.run_midday_scan()
+        return
+
+    if args.weekly:
+        weekly.write_weekly_review()
         return
 
     run_cycle()
