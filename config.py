@@ -39,6 +39,13 @@ LOOKBACK_DAYS = int(os.getenv("LOOKBACK_DAYS", 30))
 CAPITOL_TRADES_BASE  = "https://www.capitoltrades.com"
 TRADES_URL           = f"{CAPITOL_TRADES_BASE}/trades"
 
+# ── ClickUp ──────────────────────────────────────────────────────────────────
+CLICKUP_API_KEY = os.getenv("CLICKUP_API_KEY", "")
+CLICKUP_LIST_ID = os.getenv("CLICKUP_LIST_ID", "901615120980")  # "24/7 Trading Bot" list
+
+# ── Anthropic (Claude Sonnet 4.6 research filter) ────────────────────────────
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+
 # ── Local DB / Logs ──────────────────────────────────────────────────────────
 DB_FILE      = "trades_db.json"
 LOG_FILE     = "logs/bot.log"

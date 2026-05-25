@@ -28,6 +28,8 @@ import time
 
 import db
 import journal
+import notify
+import research
 import scraper
 import trader
 from config import (
@@ -67,8 +69,9 @@ def run_stop_loss_check():
         for sym in stopped:
             db.mark_skipped(
                 {"id": f"stoploss-{sym}", "ticker": sym, "trade_date": ""},
-                f"stop_loss_triggered",
+                "stop_loss_triggered",
             )
+            notify.stop_loss_triggered(sym, 0, 0)
 
 
 # ── Main trading cycle ────────────────────────────────────────────────────────
@@ -113,6 +116,23 @@ def run_cycle():
             trade.get("value", 0),
         )
 
+        # ── Claude Sonnet 4.6 research filter ────────────────────────────
+        analysis = research.research_trade(trade)
+        if analysis["decision"] == "SKIP":
+            logger.info(
+                "🧠 AI Research: SKIP %s — %s (confidence %s/10)",
+                trade["ticker"], analysis["reasoning"], analysis.get("confidence"),
+            )
+            db.mark_skipped(trade, f"ai_research: {analysis['reasoning'][:60]}")
+            notify.research_rejected(trade, analysis["reasoning"])
+            continue
+
+        logger.info(
+            "🧠 AI Research: EXECUTE %s — %s (confidence %s/10)",
+            trade["ticker"], analysis["reasoning"], analysis.get("confidence"),
+        )
+
+        # ── Execute on Alpaca ─────────────────────────────────────────────
         try:
             result = trader.execute_trade(trade)
 
@@ -120,6 +140,7 @@ def run_cycle():
                 reason = result.get("reason", "unknown")
                 logger.info("Skipped %s: %s", trade["ticker"], reason)
                 db.mark_skipped(trade, reason)
+                notify.trade_skipped(trade, reason)
             else:
                 logger.info(
                     "✅  %s %s  →  Alpaca order id=%s",
@@ -127,6 +148,7 @@ def run_cycle():
                     result.get("id", "?"),
                 )
                 db.mark_executed(trade, result)
+                notify.trade_executed(trade, result, analysis["reasoning"])
 
         except Exception as exc:
             logger.error("❌  Trade failed for %s: %s", trade["ticker"], exc)
@@ -165,6 +187,20 @@ def run_journal_if_due():
             path = journal.write_journal()
             logger.info("Journal saved: %s", path)
             _journal_written_date = today
+            # Send ClickUp daily summary
+            try:
+                acct      = trader.get_account()
+                positions = trader.get_positions()
+                summary   = db.get_summary()
+                notify.daily_summary(
+                    equity         = float(acct.get("portfolio_value", 0)),
+                    cash           = float(acct.get("cash", 0)),
+                    positions      = positions,
+                    executed_today = summary["total_executed"],
+                    stopped        = 0,
+                )
+            except Exception as exc:
+                logger.warning("ClickUp daily summary failed: %s", exc)
         except Exception as exc:
             logger.error("Journal write failed: %s", exc)
 
