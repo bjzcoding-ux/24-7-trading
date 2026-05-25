@@ -1,40 +1,49 @@
 """
 main.py — 24/7 Politician Copy Trading Bot
 
-Flow (every CHECK_INTERVAL_MINUTES):
-  1. Scrape Capitol Trades for target politician's latest trades
-  2. Skip any trade already in our local DB
-  3. Execute new trades on Alpaca paper account
-  4. Log everything to logs/bot.log
+Cycle (every CHECK_INTERVAL_MINUTES):
+  1. ✅ Stop-loss check — auto-sell any position down 8%+
+  2. ✅ Cash reserve check — skip buys if cash < 20% of portfolio
+  3. Scrape Capitol Trades for Tim Moore's recent trades (last 30 days)
+  4. Skip trades already in DB / already holding
+  5. Place LIMIT orders on Alpaca (buy at ask+0.2%, sell at bid-0.2%)
+  6. Log everything
+
+Journal (after 4:15 PM ET / 20:15 UTC, once per day):
+  - Writes journal/<date>.md with P&L, positions, trades
 
 Run:
-  python main.py           ← runs once then loops forever
-  python main.py --once    ← single run and exit
+  python3 main.py           ← loops forever
+  python3 main.py --once    ← single cycle and exit
+  python3 main.py --journal ← write today's journal and exit
 """
 
 import argparse
 import logging
 import os
-import time
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 import schedule
+import time
 
 import db
+import journal
 import scraper
 import trader
 from config import (
     CHECK_INTERVAL_MINUTES,
-    TARGET_POLITICIAN,
     TARGET_POLITICIAN_ID,
     TARGET_POLITICIAN_DISPLAY,
     LOG_FILE,
+    STOP_LOSS_PCT,
+    CASH_RESERVE_PCT,
 )
 
-
-# ── Logging setup ─────────────────────────────────────────────────────────────
+# ── Logging ──────────────────────────────────────────────────────────────────
 
 os.makedirs("logs", exist_ok=True)
+os.makedirs("journal", exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -45,16 +54,35 @@ logging.basicConfig(
 )
 logger = logging.getLogger("main")
 
+# Track whether we've written today's journal already
+_journal_written_date: str = ""
 
-# ── Core logic ────────────────────────────────────────────────────────────────
+
+# ── Stop-loss cycle ───────────────────────────────────────────────────────────
+
+def run_stop_loss_check():
+    logger.info("--- Stop-loss scan (threshold: -%.0f%%) ---", STOP_LOSS_PCT * 100)
+    stopped = trader.check_stop_losses()
+    if stopped:
+        for sym in stopped:
+            db.mark_skipped(
+                {"id": f"stoploss-{sym}", "ticker": sym, "trade_date": ""},
+                f"stop_loss_triggered",
+            )
+
+
+# ── Main trading cycle ────────────────────────────────────────────────────────
 
 def run_cycle():
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     logger.info("=" * 60)
     logger.info("CYCLE START — %s", now)
     logger.info("Tracking: %s", TARGET_POLITICIAN_DISPLAY)
 
-    # 1. Fetch trades
+    # 1. Stop-loss check first
+    run_stop_loss_check()
+
+    # 2. Scrape Capitol Trades
     try:
         trades = scraper.get_recent_trades(
             politician_id=TARGET_POLITICIAN_ID,
@@ -66,9 +94,10 @@ def run_cycle():
 
     if not trades:
         logger.info("No trades found for %s this cycle.", TARGET_POLITICIAN_DISPLAY)
+        _log_cycle_end()
         return
 
-    logger.info("Found %d trades total. Checking for new ones...", len(trades))
+    logger.info("Found %d trades. Checking for new ones...", len(trades))
 
     new_count = 0
     for trade in trades:
@@ -77,11 +106,11 @@ def run_cycle():
 
         new_count += 1
         logger.info(
-            "NEW TRADE → %s %s  |  date=%s  |  ~$%.0f",
+            "NEW TRADE → %s %s  |  filed=%s  |  ~$%.0f",
             trade["side"].upper(),
             trade["ticker"],
-            trade["trade_date"],
-            trade.get("value", trade.get("amount_low", 0)),
+            trade["filed_date"],
+            trade.get("value", 0),
         )
 
         try:
@@ -93,19 +122,23 @@ def run_cycle():
                 db.mark_skipped(trade, reason)
             else:
                 logger.info(
-                    "✅  Executed %s %s  →  Alpaca order id=%s",
+                    "✅  %s %s  →  Alpaca order id=%s",
                     trade["side"].upper(), trade["ticker"],
                     result.get("id", "?"),
                 )
                 db.mark_executed(trade, result)
 
         except Exception as exc:
-            logger.error("❌  Trade execution failed for %s: %s", trade["ticker"], exc)
+            logger.error("❌  Trade failed for %s: %s", trade["ticker"], exc)
             db.mark_error(trade, str(exc))
 
     if new_count == 0:
         logger.info("No new trades to copy this cycle.")
 
+    _log_cycle_end()
+
+
+def _log_cycle_end():
     summary = db.get_summary()
     logger.info(
         "CYCLE END — executed=%d  skipped=%d  errors=%d",
@@ -115,41 +148,77 @@ def run_cycle():
     )
 
 
-# ── Account check on startup ──────────────────────────────────────────────────
+# ── End-of-day journal ────────────────────────────────────────────────────────
+
+def run_journal_if_due():
+    """Write the daily journal once after 4:15 PM ET (20:15 UTC)."""
+    global _journal_written_date
+    now   = datetime.now(timezone.utc)
+    today = now.strftime("%Y-%m-%d")
+
+    # 4:15 PM ET = 20:15 UTC (21:15 UTC during EDT)
+    market_close_utc = now.replace(hour=20, minute=15, second=0, microsecond=0)
+
+    if now >= market_close_utc and _journal_written_date != today:
+        logger.info("Writing end-of-day journal...")
+        try:
+            path = journal.write_journal()
+            logger.info("Journal saved: %s", path)
+            _journal_written_date = today
+        except Exception as exc:
+            logger.error("Journal write failed: %s", exc)
+
+
+# ── Startup check ─────────────────────────────────────────────────────────────
 
 def startup_check():
     logger.info("━" * 60)
     logger.info("24/7 Politician Copy Bot — Starting up")
-    logger.info("Target: %s | Alpaca: Paper Trading", TARGET_POLITICIAN_DISPLAY)
+    logger.info("Target   : %s", TARGET_POLITICIAN_DISPLAY)
+    logger.info("Stop loss: -%.0f%%  |  Cash reserve: %.0f%%", STOP_LOSS_PCT * 100, CASH_RESERVE_PCT * 100)
+
     try:
-        acct = trader.get_account()
-        equity = float(acct.get("portfolio_value") or acct.get("equity", 0))
-        buying_power = float(acct.get("buying_power", 0))
-        logger.info("Alpaca account OK — equity=$%.2f  buying_power=$%.2f", equity, buying_power)
+        acct      = trader.get_account()
+        equity    = float(acct.get("portfolio_value") or 0)
+        cash      = float(acct.get("cash") or 0)
+        buy_power = float(acct.get("buying_power") or 0)
+        logger.info(
+            "Alpaca   : equity=$%.2f  cash=$%.2f  buying_power=$%.2f",
+            equity, cash, buy_power,
+        )
     except Exception as exc:
         logger.error("Alpaca connection failed: %s", exc)
         raise SystemExit(1)
-    logger.info("Check interval: every %d minutes", CHECK_INTERVAL_MINUTES)
+
+    logger.info("Interval : every %d minutes", CHECK_INTERVAL_MINUTES)
     logger.info("━" * 60)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Politician copy trading bot")
-    parser.add_argument("--once", action="store_true", help="Run one cycle and exit")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--once",    action="store_true", help="Run one cycle and exit")
+    parser.add_argument("--journal", action="store_true", help="Write today's journal and exit")
     args = parser.parse_args()
 
     startup_check()
+
+    if args.journal:
+        journal.write_journal()
+        return
+
     run_cycle()
 
     if args.once:
-        logger.info("--once flag set. Exiting after first cycle.")
+        logger.info("--once flag set. Exiting.")
         return
 
-    # Schedule recurring runs
+    # Schedule recurring runs + daily journal check
     schedule.every(CHECK_INTERVAL_MINUTES).minutes.do(run_cycle)
-    logger.info("Scheduler active. Running every %d minutes...", CHECK_INTERVAL_MINUTES)
+    schedule.every(CHECK_INTERVAL_MINUTES).minutes.do(run_journal_if_due)
+
+    logger.info("Scheduler active — every %d minutes.", CHECK_INTERVAL_MINUTES)
 
     while True:
         schedule.run_pending()
