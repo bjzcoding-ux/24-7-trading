@@ -4,10 +4,15 @@ main.py — 24/7 Politician Copy Trading Bot
 Cycle (every CHECK_INTERVAL_MINUTES):
   1. ✅ Stop-loss check — auto-sell any position down 8%+
   2. ✅ Cash reserve check — skip buys if cash < 20% of portfolio
-  3. Scrape Capitol Trades for Tim Moore's recent trades (last 30 days)
+  3. Scrape Capitol Trades for ALL tracked politicians (last 30 days)
   4. Skip trades already in DB / already holding
   5. Place LIMIT orders on Alpaca (buy at ask+0.2%, sell at bid-0.2%)
   6. Log everything
+
+Tracked politicians (set POLITICIANS in .env):
+  - Rohit Khanna  (K000389) — 156 buys/30d, most active buyer in Congress
+  - Tim Moore     (M001236) — 7 trades, fast 1-2 day disclosure lag
+  - Byron Donalds (D000032) — 8 trades, balanced buy/sell
 
 Journal (after 4:15 PM ET / 20:15 UTC, once per day):
   - Writes journal/<date>.md with P&L, positions, trades
@@ -38,6 +43,7 @@ from config import (
     CHECK_INTERVAL_MINUTES,
     TARGET_POLITICIAN_ID,
     TARGET_POLITICIAN_DISPLAY,
+    POLITICIANS,
     LOG_FILE,
     STOP_LOSS_PCT,
     CASH_RESERVE_PCT,
@@ -59,7 +65,7 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 # Track whether we've written today's journal already
-_journal_written_date: str = ""
+_journal_written_date = ""
 
 
 # ── Stop-loss cycle ───────────────────────────────────────────────────────────
@@ -76,33 +82,26 @@ def run_stop_loss_check():
             notify.stop_loss_triggered(sym, 0, 0)
 
 
-# ── Main trading cycle ────────────────────────────────────────────────────────
+# ── Per-politician trade processing ──────────────────────────────────────────
 
-def run_cycle():
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    logger.info("=" * 60)
-    logger.info("CYCLE START — %s", now)
-    logger.info("Tracking: %s", TARGET_POLITICIAN_DISPLAY)
+def _process_politician(pol_id, pol_display):
+    """Scrape and execute trades for one politician. Returns (new_count, error)."""
+    logger.info("── Checking %s (%s) ──", pol_display, pol_id)
 
-    # 1. Stop-loss check first
-    run_stop_loss_check()
-
-    # 2. Scrape Capitol Trades
     try:
         trades = scraper.get_recent_trades(
-            politician_id=TARGET_POLITICIAN_ID,
-            politician_display=TARGET_POLITICIAN_DISPLAY,
+            politician_id=pol_id,
+            politician_display=pol_display,
         )
     except Exception as exc:
-        logger.error("Scrape failed: %s", exc)
-        return
+        logger.error("Scrape failed for %s: %s", pol_display, exc)
+        return 0, str(exc)
 
     if not trades:
-        logger.info("No trades found for %s this cycle.", TARGET_POLITICIAN_DISPLAY)
-        _log_cycle_end()
-        return
+        logger.info("No recent trades for %s.", pol_display)
+        return 0, None
 
-    logger.info("Found %d trades. Checking for new ones...", len(trades))
+    logger.info("Found %d trades for %s. Checking for new ones...", len(trades), pol_display)
 
     new_count = 0
     for trade in trades:
@@ -111,7 +110,8 @@ def run_cycle():
 
         new_count += 1
         logger.info(
-            "NEW TRADE → %s %s  |  filed=%s  |  ~$%.0f",
+            "NEW TRADE [%s] → %s %s  |  filed=%s  |  ~$%.0f",
+            pol_display,
             trade["side"].upper(),
             trade["ticker"],
             trade["filed_date"],
@@ -156,8 +156,32 @@ def run_cycle():
             logger.error("❌  Trade failed for %s: %s", trade["ticker"], exc)
             db.mark_error(trade, str(exc))
 
-    if new_count == 0:
-        logger.info("No new trades to copy this cycle.")
+    return new_count, None
+
+
+# ── Main trading cycle ────────────────────────────────────────────────────────
+
+def run_cycle():
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    logger.info("=" * 60)
+    logger.info("CYCLE START — %s", now)
+    logger.info(
+        "Tracking %d politicians: %s",
+        len(POLITICIANS),
+        ", ".join(p["display"] for p in POLITICIANS),
+    )
+
+    # 1. Stop-loss check first
+    run_stop_loss_check()
+
+    # 2. Process each politician
+    total_new = 0
+    for pol in POLITICIANS:
+        new, _ = _process_politician(pol["id"], pol["display"])
+        total_new += new
+
+    if total_new == 0:
+        logger.info("No new trades to copy this cycle across all politicians.")
 
     _log_cycle_end()
 
@@ -212,7 +236,10 @@ def run_journal_if_due():
 def startup_check():
     logger.info("━" * 60)
     logger.info("24/7 Politician Copy Bot — Starting up")
-    logger.info("Target   : %s", TARGET_POLITICIAN_DISPLAY)
+    logger.info(
+        "Politicians: %s",
+        " | ".join(f"{p['display']} ({p['id']})" for p in POLITICIANS),
+    )
     logger.info("Stop loss: -%.0f%%  |  Cash reserve: %.0f%%", STOP_LOSS_PCT * 100, CASH_RESERVE_PCT * 100)
 
     try:

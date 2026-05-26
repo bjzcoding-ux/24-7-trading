@@ -11,12 +11,26 @@ ALPACA_KEY        = os.getenv("ALPACA_KEY")
 ALPACA_SECRET     = os.getenv("ALPACA_SECRET")
 ALPACA_BASE_URL   = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
 
-# ── Target Politician ────────────────────────────────────────────────────────
+# ── Target Politicians (multi-politician support) ────────────────────────────
+# Legacy single-politician vars (kept for backwards compat)
 TARGET_POLITICIAN         = os.getenv("TARGET_POLITICIAN", "tim-moore")
 TARGET_POLITICIAN_DISPLAY = os.getenv("TARGET_POLITICIAN_DISPLAY", "Tim Moore")
-# Capitol Trades internal politician ID (from RSC payload research)
-# Tim Moore = M001236 | Warren Davidson = D000626
 TARGET_POLITICIAN_ID      = os.getenv("TARGET_POLITICIAN_ID", "M001236")
+
+# Multi-politician list — format: "ID:Display Name,ID:Display Name"
+# e.g. "M001236:Tim Moore,K000389:Rohit Khanna,D000032:Byron Donalds"
+_raw = os.getenv(
+    "POLITICIANS",
+    f"{TARGET_POLITICIAN_ID}:{TARGET_POLITICIAN_DISPLAY}"
+)
+POLITICIANS = []
+for entry in _raw.split(","):
+    entry = entry.strip()
+    if ":" in entry:
+        pid, display = entry.split(":", 1)
+        POLITICIANS.append({"id": pid.strip(), "display": display.strip()})
+    elif entry:
+        POLITICIANS.append({"id": entry.strip(), "display": entry.strip()})
 
 # ── Trade Sizing ─────────────────────────────────────────────────────────────
 TRADE_FRACTION  = float(os.getenv("TRADE_FRACTION", 0.05))   # 5% of portfolio per trade
