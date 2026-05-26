@@ -14,3 +14,7 @@ trades_db.json
 logs/
 *.log
 .DS_Store
+
+# Runtime research files (regenerated each session by Claude agent)
+research/analysis.json
+research/raw_trades.json
