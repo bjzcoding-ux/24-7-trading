@@ -12,6 +12,7 @@ import os
 from datetime import datetime, timezone, timedelta
 
 import trader
+import wheel
 from config import JOURNAL_DIR, DB_FILE
 
 logger = logging.getLogger("journal")
@@ -127,6 +128,12 @@ def write_journal() -> str:
         lines.append("")
     else:
         lines += ["## Trades Executed Today", "_No new trades copied today._", ""]
+
+    # ── Wheel strategy summary ────────────────────────────────────────────────
+    try:
+        lines += ["", wheel.get_wheel_summary(), ""]
+    except Exception:
+        pass
 
     # ── Risk summary ─────────────────────────────────────────────────────────
     cash_pct = (cash / equity * 100) if equity else 0

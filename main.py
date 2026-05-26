@@ -39,6 +39,7 @@ import research
 import scraper
 import trader
 import weekly
+import wheel
 from config import (
     CHECK_INTERVAL_MINUTES,
     TARGET_POLITICIAN_ID,
@@ -182,6 +183,20 @@ def run_cycle():
 
     if total_new == 0:
         logger.info("No new trades to copy this cycle across all politicians.")
+
+    # 3. Wheel strategy — sell covered calls on owned positions + CSPs on top tickers
+    logger.info("--- Wheel Strategy ---")
+    try:
+        wheel_result = wheel.run_wheel_cycle()
+        if wheel_result["calls_sold"]:
+            logger.info("🎡 Covered calls sold: %s", wheel_result["calls_sold"])
+        if wheel_result["puts_sold"]:
+            logger.info("🎡 Cash-secured puts sold: %s", wheel_result["puts_sold"])
+        if wheel_result["early_closed"]:
+            logger.info("🎡 Early closed at 50%% profit: %s", wheel_result["early_closed"])
+        logger.info("🎡 Total premium collected: $%.2f", wheel_result["total_premium"])
+    except Exception as exc:
+        logger.error("Wheel strategy error: %s", exc)
 
     _log_cycle_end()
 
