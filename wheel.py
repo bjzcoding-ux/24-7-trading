@@ -50,6 +50,12 @@ DATA_HEADERS = {
 
 WHEEL_DB = "wheel_db.json"
 
+# ── Manual wheel tickers (always run wheel on these regardless of politician trades) ──
+# Add any stock you want to sell puts/calls on permanently
+MANUAL_WHEEL_TICKERS = [
+    "TSM",   # Taiwan Semiconductor — AI chip monopoly, 90% of advanced chips
+]
+
 # ── Wheel DB ──────────────────────────────────────────────────────────────────
 
 def _load_wheel_db():
@@ -404,8 +410,8 @@ def run_wheel_cycle():
             calls_sold.append(symbol)
 
     # 3. Stage 1 — sell cash-secured puts on top copy-trade stocks
-    # Use the stocks recently bought by politicians (top 3 active tickers)
-    top_tickers = _get_top_copy_tickers(limit=3)
+    # Combines manually pinned tickers + most recently copied politician tickers
+    top_tickers = list(dict.fromkeys(MANUAL_WHEEL_TICKERS + _get_top_copy_tickers(limit=3)))
     puts_sold = []
     for symbol in top_tickers:
         # Skip if we already own it (would do covered call instead)
