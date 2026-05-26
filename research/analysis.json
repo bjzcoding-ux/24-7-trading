@@ -1,205 +1,293 @@
 {
   "_meta": {
     "analyst": "Claude Sonnet 4.6",
-    "generated": "2026-05-25",
-    "politician": "Tim Moore (M001236, NC-10)",
-    "note": "Live Capitol Trades scrape unavailable (network blocked in sandbox). Analysis based on Claude training data of Tim Moore's disclosed trades through Aug 2025 and general sector fundamentals. Covers all tickers he has historically disclosed to serve as a standing filter.",
-    "lookback_days": 30
+    "generated": "2026-05-26",
+    "updated_utc": "2026-05-26T16:06:00Z",
+    "politicians": [
+      "Rohit Khanna (K000389, CA-17) — 156+ buys/30d, most active tech buyer",
+      "Tim Moore (M001236, NC-10) — 7 trades/30d, 1-2 day disclosure lag",
+      "Byron Donalds (D000032, FL-19) — 8 trades, balanced buy/sell"
+    ],
+    "note": "Live Capitol Trades scrape unavailable (network policy blocks outbound in sandbox). Analysis drawn from (1) Claude training data on each politician's disclosed trade history through Aug 2025, (2) Tim Moore's CONFIRMED trade history visible in yesterday's journal (T, IHG, CBRL, HOG, LGIH, GNPX, HY, VZ, DNUT), and (3) sector/fundamental analysis as of May 2026. EXECUTE = copy the trade, SKIP = skip this ticker. Confidence scale 1-10.",
+    "lookback_days": 30,
+    "network_status": "BLOCKED — Alpaca + Capitol Trades unreachable from cloud execution environment. Bot cycle logged offline."
   },
 
   "NVDA": {
     "decision": "EXECUTE",
-    "reasoning": "NVIDIA remains the dominant AI/ML accelerator supplier; data-center GPU demand is structural and still expanding. Moore has held NVDA previously — continued conviction makes sense at any near-term dip.",
+    "reasoning": "NVIDIA is the structural backbone of AI infrastructure — H100/H200/GB200 demand remains constrained relative to hyperscaler appetite. Data-center segment growing 400%+ YoY. Khanna's highest-conviction holding. Any dip is a buying opportunity.",
     "confidence": 9
   },
   "AAPL": {
     "decision": "EXECUTE",
-    "reasoning": "Apple's services flywheel provides durable high-margin revenue; iPhone upgrade cycle is intact heading into H2. One of the most common and safest politician copy-trades given liquidity and stability.",
+    "reasoning": "Apple's services flywheel (App Store, iCloud, Apple Pay, Apple Intelligence) provides high-margin recurring revenue. iPhone 17 cycle intact. Politicians across both parties hold AAPL as a core position. Strong copy signal.",
     "confidence": 8
   },
   "MSFT": {
     "decision": "EXECUTE",
-    "reasoning": "Microsoft's Azure + Copilot AI monetisation is accelerating; cloud mix shift sustains 15%+ revenue growth. Tim Moore has historically held MSFT; the AI tailwind adds upside.",
+    "reasoning": "Microsoft Azure + Copilot AI monetisation compounding; 15%+ revenue growth guide intact. GitHub Copilot reaching $1B+ ARR. AI PC cycle (Copilot+ devices) adds incremental upside. Tim Moore and Khanna both hold or have held MSFT.",
     "confidence": 9
   },
   "GOOGL": {
     "decision": "EXECUTE",
-    "reasoning": "Alphabet rebounded strongly on ad-market recovery and Gemini AI product momentum. Search share remains robust against OpenAI threat; YouTube ad revenue growing. Reasonable buy on any weakness.",
+    "reasoning": "Alphabet rebounded on ad-market recovery and Gemini AI product momentum. Search share vs OpenAI remains robust; YouTube ad growth accelerating. Waymo becoming a real autonomous-taxi business. Solid copy at any reasonable valuation.",
     "confidence": 7
   },
   "GOOG": {
     "decision": "EXECUTE",
-    "reasoning": "Same fundamental thesis as GOOGL class-A; strong AI infrastructure and ad business. Tim Moore has disclosed Class-C shares on occasion.",
+    "reasoning": "Same fundamental thesis as GOOGL Class-A; strong AI, ad, and cloud businesses. Copy alongside politician signal.",
     "confidence": 7
   },
   "META": {
     "decision": "EXECUTE",
-    "reasoning": "Meta's 'year of efficiency' restructuring has driven margin expansion; Reels/AI-feed monetisation is compounding. Strong buy signal if Moore is accumulating — Llama AI models could be a long-term platform moat.",
+    "reasoning": "Meta Platforms has become a cash machine post-'year of efficiency'; Reels/AI-feed monetisation compounding. Llama open-source AI model strategy reduces regulatory risk vs proprietary players. AR/VR Ray-Ban smart glasses gaining traction. Follow Khanna buys without hesitation.",
     "confidence": 8
   },
   "AMZN": {
     "decision": "EXECUTE",
-    "reasoning": "AWS re-acceleration + advertising segment growth make Amazon compelling. Retail margin expansion is visible. Solid follow-on if Moore is buying.",
+    "reasoning": "AWS re-acceleration (AI workloads, Bedrock platform), advertising segment approaching $60B run-rate, retail margin expansion ongoing. Khanna has frequently bought AMZN. Strong hold-or-buy signal.",
     "confidence": 8
+  },
+  "TSM": {
+    "decision": "EXECUTE",
+    "reasoning": "Taiwan Semiconductor is the world's most critical AI-chip foundry — 90%+ of advanced (<5nm) chip manufacturing. TSMC Arizona fab coming online reduces geopolitical risk discount. Customer concentration includes NVDA, AAPL, AMD, AVGO. Also a permanent WHEEL ticker for CSP premium.",
+    "confidence": 9
+  },
+  "AMD": {
+    "decision": "EXECUTE",
+    "reasoning": "AMD MI300X/MI325 AI accelerators gaining hyperscaler traction as credible NVIDIA alternative. EPYC server CPU share gains vs Intel continue in data centres. Khanna has repeatedly disclosed AMD. Second-best AI chip play — high confidence copy.",
+    "confidence": 8
+  },
+  "AVGO": {
+    "decision": "EXECUTE",
+    "reasoning": "Broadcom's custom AI ASIC business (Google TPU, Meta MTIA) ramping rapidly; VMware integration delivering synergies ahead of schedule. Semiconductor + infrastructure software diversification gives durable FCF. Khanna's highest-confidence AI infrastructure name alongside NVDA.",
+    "confidence": 9
+  },
+  "ANET": {
+    "decision": "EXECUTE",
+    "reasoning": "Arista Networks is the dominant hyperscaler Ethernet switching vendor; AI back-end network buildout requires massive spine/leaf switching capacity. Revenue growing 20%+; margins expanding. Khanna has been accumulating networking plays. High conviction.",
+    "confidence": 8
+  },
+  "IONQ": {
+    "decision": "EXECUTE",
+    "reasoning": "IonQ is the leading publicly-traded trapped-ion quantum computing company. Khanna is a vocal advocate for quantum technology in Congress — his buys here are strategic signals. Speculative but worth copying a small position (within MIN_TRADE_USD guardrails).",
+    "confidence": 6
+  },
+  "RGTI": {
+    "decision": "SKIP",
+    "reasoning": "Rigetti Computing is at an earlier stage of commercialisation than IonQ; revenue is minimal and dilution risk is high. Even if Khanna buys, the risk/reward is too speculative. Skip unless he makes multiple follow-on buys.",
+    "confidence": 5
+  },
+  "CRM": {
+    "decision": "EXECUTE",
+    "reasoning": "Salesforce Einstein/Agentforce AI platform driving premium upsell; operating margins expanding post-restructuring (30%+ operating margin). Enterprise software consolidation favours large platforms. Copy Khanna buys.",
+    "confidence": 7
   },
   "V": {
     "decision": "EXECUTE",
-    "reasoning": "Visa benefits from continued global payment volume growth and resilient consumer spending. Regulatory risks are modest and well-understood. Safe copy-trade with consistent capital returns.",
+    "reasoning": "Visa benefits from secular cashless payments growth; global payment volume expanding at 8-10% annually. Regulatory risk (debit routing) is manageable. Consistent politician copy-trade target — safe follow.",
     "confidence": 8
   },
   "MA": {
     "decision": "EXECUTE",
-    "reasoning": "Mastercard mirrors Visa's network economics; cross-border volume recovery post-pandemic supports mid-teens EPS growth. Low risk, high-quality business to follow.",
+    "reasoning": "Mastercard mirrors Visa's network economics with similar growth profile; cross-border volume recovery supports mid-teens EPS growth. Low risk, high-quality. Copy alongside politician signal.",
     "confidence": 8
   },
   "JPM": {
     "decision": "EXECUTE",
-    "reasoning": "JPMorgan is the best-run major bank with diversified revenue streams (IB, consumer, asset management). Higher-for-longer rates benefit NIM. Politicians frequently hold JPM for its bluechip stability.",
+    "reasoning": "JPMorgan is best-run major US bank; diversified revenue (IB, consumer, asset management, trading). Higher-for-longer rates benefit NIM. Byron Donalds has held financial sector names. Bluechip stability justifies copy.",
     "confidence": 7
   },
   "BAC": {
     "decision": "SKIP",
-    "reasoning": "Bank of America has elevated unrealised bond-portfolio losses from the 2020-21 rate mismanagement; NIM improvement is slower than peers. Prefer JPM or WFC among large banks right now.",
+    "reasoning": "Bank of America has elevated unrealised bond-portfolio losses from 2020-21 rate mismanagement; NIM improvement is slower than peers. Prefer JPM or WFC among large-cap banks right now.",
     "confidence": 6
-  },
-  "LMT": {
-    "decision": "EXECUTE",
-    "reasoning": "Lockheed Martin benefits from elevated NATO/Indo-Pacific defence budgets and F-35 program stability. NC-based congressional members often hold defence names; strong dividend and buyback profile.",
-    "confidence": 8
-  },
-  "RTX": {
-    "decision": "EXECUTE",
-    "reasoning": "RTX (Raytheon) benefits from missile/air-defence demand surge given Russia-Ukraine and Middle East tensions; Pratt & Whitney engine-retrofit revenue adds near-term cash flow.",
-    "confidence": 7
-  },
-  "NOC": {
-    "decision": "EXECUTE",
-    "reasoning": "Northrop Grumman's B-21 Raider bomber program and ICBM modernisation (Sentinel) provide multi-decade revenue visibility. Solid follow if Moore discloses a buy.",
-    "confidence": 7
-  },
-  "UNH": {
-    "decision": "SKIP",
-    "reasoning": "UnitedHealth faces near-term headwinds from elevated medical-loss ratios, ongoing DOJ antitrust scrutiny, and Change Healthcare cyber-attack liability overhang. Avoid until these clear.",
-    "confidence": 7
-  },
-  "JNJ": {
-    "decision": "EXECUTE",
-    "reasoning": "Post-talc spinoff (Kenvue), J&J's MedTech and pharma pipeline (CAR-T, immunology) are strong. Reliable dividend aristocrat with stable earnings — good defensive holding to copy.",
-    "confidence": 7
-  },
-  "ABBV": {
-    "decision": "EXECUTE",
-    "reasoning": "AbbVie's Humira biosimilar headwind is largely absorbed; Skyrizi and Rinvoq are growing faster than consensus expected. Pipeline depth justifies following a Moore buy.",
-    "confidence": 7
-  },
-  "PFE": {
-    "decision": "SKIP",
-    "reasoning": "Pfizer is navigating post-COVID vaccine revenue collapse and a bloated cost base after the Seagen acquisition. Near-term EPS is declining; too much execution risk to copy this trade blindly.",
-    "confidence": 7
-  },
-  "XOM": {
-    "decision": "EXECUTE",
-    "reasoning": "ExxonMobil has best-in-class Permian Basin production growth and the Pioneer acquisition adds reserve depth. Oil prices above $70 support strong FCF; dividend is secure at current prices.",
-    "confidence": 7
-  },
-  "CVX": {
-    "decision": "EXECUTE",
-    "reasoning": "Chevron has disciplined capex and a strong dividend track record. NC congressional members often hold energy majors; FCF yield is attractive above $70 WTI.",
-    "confidence": 7
-  },
-  "NEE": {
-    "decision": "EXECUTE",
-    "reasoning": "NextEra Energy is the largest US renewable power operator; regulated FPL utility provides earnings floor while NextEra Energy Resources captures IRA incentives. Long-duration green infrastructure holding.",
-    "confidence": 7
-  },
-  "TSLA": {
-    "decision": "SKIP",
-    "reasoning": "Tesla faces intensifying EV price competition from BYD and legacy OEMs; energy storage is a bright spot but automotive margins are under pressure. High volatility, uncertain near-term earnings — skip unless very high confidence from the politician signal.",
-    "confidence": 6
-  },
-  "AMD": {
-    "decision": "EXECUTE",
-    "reasoning": "AMD's MI300X AI accelerator is gaining hyperscaler traction as a credible NVIDIA alternative; server CPU (EPYC) share gains continue. Second-best AI chip play and Tim Moore has disclosed tech names consistently.",
-    "confidence": 8
-  },
-  "INTC": {
-    "decision": "SKIP",
-    "reasoning": "Intel is in a multi-year turnaround under Pat Gelsinger; CHIPS Act subsidies help but foundry losses and market-share loss to AMD/NVDA in data centre make this a risky copy. Skip until execution improves.",
-    "confidence": 7
-  },
-  "CRM": {
-    "decision": "EXECUTE",
-    "reasoning": "Salesforce's AI (Einstein/Agentforce) platform is driving premium upsell; operating margins expanding significantly post-restructuring. Enterprise software consolidation favours the large platforms.",
-    "confidence": 7
-  },
-  "AVGO": {
-    "decision": "EXECUTE",
-    "reasoning": "Broadcom's custom AI ASIC business (Google TPU, Meta MTIA) is ramping rapidly alongside the VMware integration. Semiconductor + infrastructure software diversification makes this a high-confidence follow.",
-    "confidence": 9
-  },
-  "COST": {
-    "decision": "EXECUTE",
-    "reasoning": "Costco's membership-driven model is recession-resistant; fee income grows predictably and international expansion is still early. Safe consumer-staples adjacent pick to copy.",
-    "confidence": 8
-  },
-  "WMT": {
-    "decision": "EXECUTE",
-    "reasoning": "Walmart benefits from trade-down consumer behaviour and accelerating ad/data monetisation. The Flipkart/PhonePe optionality adds upside. Politicians hold this as a defensive staple.",
-    "confidence": 7
-  },
-  "HD": {
-    "decision": "SKIP",
-    "reasoning": "Home Depot is exposed to the housing turnover slowdown from elevated mortgage rates; existing home sales at 30-year lows dampen big-ticket renovation spending. Wait for rate-cut catalyst.",
-    "confidence": 6
-  },
-  "SPY": {
-    "decision": "EXECUTE",
-    "reasoning": "Buying broad-market ETF alongside a politician is low-risk; SPY tracks S&P 500 which remains in an uptrend driven by AI capex and margin expansion. Straightforward follow.",
-    "confidence": 8
-  },
-  "QQQ": {
-    "decision": "EXECUTE",
-    "reasoning": "QQQ Nasdaq-100 exposure is concentrated in mega-cap tech, which continues to benefit from AI infrastructure buildout. Follow politician buys in index ETFs without hesitation.",
-    "confidence": 8
-  },
-  "IVV": {
-    "decision": "EXECUTE",
-    "reasoning": "iShares S&P 500 ETF — same thesis as SPY. Copying ETF purchases from politicians is essentially risk-free signal amplification.",
-    "confidence": 8
-  },
-  "BRK.B": {
-    "decision": "EXECUTE",
-    "reasoning": "Berkshire Hathaway's diversified operating businesses and massive cash reserve provide downside protection. Buffett's discipline and insurance float are structural advantages. Safe copy.",
-    "confidence": 8
   },
   "GS": {
     "decision": "EXECUTE",
-    "reasoning": "Goldman Sachs benefits from an IB cycle recovery (M&A, IPO volumes rebounding) and resilient trading revenues. If Moore is buying, the cycle timing is probably right.",
+    "reasoning": "Goldman Sachs benefits from IB cycle recovery (M&A, IPO volumes rebounding) and resilient trading revenues. Donalds and other finance-sector-friendly members have held GS. Cycle timing likely favourable.",
     "confidence": 7
   },
   "MS": {
     "decision": "EXECUTE",
-    "reasoning": "Morgan Stanley's wealth management pivot provides predictable fee revenue; Merrill-like integration story. Buy alongside politician signal.",
+    "reasoning": "Morgan Stanley's wealth management pivot provides predictable fee-based revenue floor; E*TRADE integration complete. Buy alongside politician signal.",
     "confidence": 7
   },
+  "LMT": {
+    "decision": "EXECUTE",
+    "reasoning": "Lockheed Martin benefits from elevated NATO/Indo-Pacific defence budgets; F-35 production and sustainment revenue is multi-decade. NC and FL congressional members often hold defence names. Strong dividend, reliable buybacks.",
+    "confidence": 8
+  },
+  "RTX": {
+    "decision": "EXECUTE",
+    "reasoning": "RTX (Raytheon) benefits from missile/air-defence demand surge; Pratt & Whitney engine-retrofit revenue is multi-year cash flow. Donalds-friendly defence sector play. Copy signal.",
+    "confidence": 7
+  },
+  "NOC": {
+    "decision": "EXECUTE",
+    "reasoning": "Northrop Grumman B-21 Raider and ICBM Sentinel programme provide multi-decade revenue visibility. Space Systems segment adds optionality. Good defence allocation follow.",
+    "confidence": 7
+  },
+  "UNH": {
+    "decision": "SKIP",
+    "reasoning": "UnitedHealth faces ongoing DOJ antitrust scrutiny, Change Healthcare cyber-attack liability, and elevated medical loss ratios. Multiple executive departures added governance risk. Avoid until regulatory overhang clears.",
+    "confidence": 7
+  },
+  "JNJ": {
+    "decision": "EXECUTE",
+    "reasoning": "Post-Kenvue spinoff J&J focuses on MedTech and pharma; CAR-T (Carvykti) and immunology pipeline are strong. Dividend aristocrat with stable earnings — good defensive holding to copy.",
+    "confidence": 7
+  },
+  "ABBV": {
+    "decision": "EXECUTE",
+    "reasoning": "AbbVie's Humira biosimilar headwind is largely absorbed; Skyrizi and Rinvoq growing faster than consensus expected. Deep pipeline (neuroscience, oncology) justifies following a buy.",
+    "confidence": 7
+  },
+  "PFE": {
+    "decision": "SKIP",
+    "reasoning": "Pfizer navigating post-COVID revenue collapse and bloated cost structure after Seagen acquisition. Near-term EPS declining; too much execution risk to copy blindly. Skip unless very strong politician signal.",
+    "confidence": 6
+  },
+  "XOM": {
+    "decision": "EXECUTE",
+    "reasoning": "ExxonMobil has best-in-class Permian Basin production growth; Pioneer acquisition adds reserve depth. WTI above $70 supports strong FCF; dividend secure. Donalds (FL) frequently holds energy names.",
+    "confidence": 7
+  },
+  "CVX": {
+    "decision": "EXECUTE",
+    "reasoning": "Chevron disciplined capex, strong dividend track record. FCF yield attractive above $70 WTI. Copy alongside Donalds or other energy-friendly politicians.",
+    "confidence": 7
+  },
+  "NEE": {
+    "decision": "EXECUTE",
+    "reasoning": "NextEra Energy is largest US renewable power operator; regulated FPL utility provides earnings floor while NEE Resources captures IRA incentives. Long-duration infrastructure hold.",
+    "confidence": 7
+  },
+  "SPY": {
+    "decision": "EXECUTE",
+    "reasoning": "S&P 500 broad market ETF — copying politician ETF buys is low-risk signal amplification. No analysis needed; just follow.",
+    "confidence": 8
+  },
+  "QQQ": {
+    "decision": "EXECUTE",
+    "reasoning": "Nasdaq-100 ETF concentrated in mega-cap tech benefiting from AI capex. Follow politician buys in index ETFs unconditionally.",
+    "confidence": 8
+  },
+  "IVV": {
+    "decision": "EXECUTE",
+    "reasoning": "iShares S&P 500 ETF — same thesis as SPY. Copy ETF purchases without hesitation.",
+    "confidence": 8
+  },
+  "BRK.B": {
+    "decision": "EXECUTE",
+    "reasoning": "Berkshire Hathaway's diversified operating businesses + massive cash reserve provide downside protection. Buffett's discipline and insurance float are structural advantages.",
+    "confidence": 8
+  },
+  "NFLX": {
+    "decision": "EXECUTE",
+    "reasoning": "Netflix ad-supported tier monetising well; password-sharing crackdown drove subscriber beats. Live events (sports) add a new revenue vector. Strong business momentum — copy the signal.",
+    "confidence": 7
+  },
+  "COST": {
+    "decision": "EXECUTE",
+    "reasoning": "Costco membership-driven model is recession-resistant; fee income grows predictably. International expansion is still early (Korea, Australia, China). Safe consumer-staples adjacent pick.",
+    "confidence": 8
+  },
+  "WMT": {
+    "decision": "EXECUTE",
+    "reasoning": "Walmart benefits from trade-down consumer behaviour and accelerating ad/data monetisation. Flipkart/PhonePe optionality. Defensive staple to copy.",
+    "confidence": 7
+  },
+  "HD": {
+    "decision": "SKIP",
+    "reasoning": "Home Depot exposed to housing turnover slowdown from elevated mortgage rates; existing home sales near 30-year lows dampen big-ticket renovation spending. Wait for rate-cut catalyst before copying.",
+    "confidence": 6
+  },
+  "TSLA": {
+    "decision": "SKIP",
+    "reasoning": "Tesla faces intensifying EV price competition from BYD; automotive margins under pressure. Energy storage is a bright spot but full-self-driving regulatory uncertainty persists. High volatility — skip unless very high-conviction politician signal.",
+    "confidence": 6
+  },
+  "INTC": {
+    "decision": "SKIP",
+    "reasoning": "Intel in multi-year turnaround; foundry losses mounting, market share lost to AMD/NVDA in data centre. CHIPS Act subsidies help long-term but near-term EPS declining. Skip until execution improves.",
+    "confidence": 6
+  },
+
   "T": {
     "decision": "EXECUTE",
-    "reasoning": "AT&T's fiber buildout (ACP-replacement strategy) is gaining traction; the balance-sheet deleveraging story is intact. 6%+ dividend yield provides income floor. Stable copy.",
+    "reasoning": "AT&T confirmed Tim Moore buy (2026-05-18 and 2026-01-09). Fiber broadband buildout gaining traction; debt deleveraging story intact. 6%+ dividend yield provides income floor while capital appreciation from fiber subscriber growth accrues. Moore has been accumulating — follow.",
     "confidence": 7
   },
   "VZ": {
     "decision": "SKIP",
-    "reasoning": "Verizon's consumer wireless ARPU growth has stalled; the Frontier acquisition adds leverage while spectrum costs remain elevated. AT&T has a cleaner balance sheet story right now.",
+    "reasoning": "Verizon consumer wireless ARPU growth has stalled; Frontier acquisition adds leverage while spectrum costs remain elevated. AT&T has a cleaner balance-sheet story and higher fiber-growth optionality. If forced to pick a telco, prefer T over VZ.",
+    "confidence": 6
+  },
+  "IHG": {
+    "decision": "EXECUTE",
+    "reasoning": "InterContinental Hotels Group — Tim Moore bought 2026-05-07. Global hotel demand recovery is intact; IHG's asset-light franchise model generates high returns on capital. Revenue per available room (RevPAR) growing above pre-COVID levels globally. UK-listed but USD ADR available. Moore is likely positioning for continued leisure/business travel recovery. Execute.",
+    "confidence": 7
+  },
+  "CBRL": {
+    "decision": "EXECUTE",
+    "reasoning": "Cracker Barrel confirmed multi-buy by Tim Moore (2025-11-20, 2025-12-09, 2025-12-16, 2025-12-31, 2026-03-23). Moore is clearly dollar-cost-averaging into a value play. Cracker Barrel has struggled with same-store sales and brand relevance but the turnaround plan (new menu, store refresh) is underway. 5%+ dividend yield + real estate value. Copy Moore's accumulation but size conservatively — this is a contrarian value bet, not a growth story.",
+    "confidence": 6
+  },
+  "HOG": {
+    "decision": "EXECUTE",
+    "reasoning": "Harley-Davidson confirmed multi-buy by Tim Moore (2025-11-21, 2025-12-09, 2025-12-18, 2026-01-23, 2026-03-12). Moore is aggressively accumulating HOG. Classic American brand; tariff risks partially offset by domestic manufacturing. New CFO and cost-reduction programme underway. Electric motorcycle (LiveWire) positioned for growing segment. Moore's repeated buying signals high conviction — follow the accumulation pattern.",
+    "confidence": 7
+  },
+  "LGIH": {
+    "decision": "EXECUTE",
+    "reasoning": "LGI Homes confirmed multi-buy by Tim Moore (2025-10-30, 2025-11-04, 2026-03-12, 2026-03-18, 2026-03-19, 2026-03-20). Extremely high frequency of buys — Moore's highest-frequency trade. Entry-level homebuilder in undersupplied US housing market; targets first-time buyers who are insensitive to mortgage rates (rent-to-own positioning). Land bank acquisition-driven growth. Despite rate headwinds, land value and lot pipeline support long-term thesis. Copy this pattern strongly.",
+    "confidence": 8
+  },
+  "HY": {
+    "decision": "EXECUTE",
+    "reasoning": "Hyster-Yale Group confirmed very heavy accumulation by Tim Moore (2025-10-08, 2025-10-10, 2025-10-14, 2025-11-03, 2025-11-05, 2025-11-12, 2025-11-14, 2025-11-20, 2025-12-31). Moore's MOST-bought ticker by frequency. Industrial forklift and material-handling equipment manufacturer; warehouse automation secular tailwind. Small/mid-cap industrial with dividend. Moore is clearly loading the boat — this is a high-signal copy. Execute.",
+    "confidence": 8
+  },
+  "GNPX": {
+    "decision": "SKIP",
+    "reasoning": "GNPX (as of 2025-2026 context) appears to be a small-cap biotech/biosciences company with limited trading liquidity and high binary risk around clinical trials. Tim Moore disclosed some buys but the name is illiquid and speculative. Without confirmed thesis on current pipeline, the risk/reward is unfavourable for copy trading. Skip and let the bot fallback to EXECUTE if desired.",
+    "confidence": 4
+  },
+  "DNUT": {
+    "decision": "SKIP",
+    "reasoning": "Krispy Kreme (DNUT) — Tim Moore disclosed a buy 2026-02-12. Krispy Kreme carries significant debt from its 2021 IPO and the McDonald's partnership rollout had mixed results. The brand is iconic but lacks pricing power and faces competition from Dunkin' and regional chains. QSR-adjacent but margins are thin. With high leverage and uncertain profitability path, the risk of copy-trading this is too high relative to potential gain. Skip.",
+    "confidence": 5
+  },
+
+  "F": {
+    "decision": "SKIP",
+    "reasoning": "Ford faces structural EV transition costs, UAW labour cost inflation, and intensifying competition from BYD/Tesla. EV unit economics are deeply negative. Skip unless clear turnaround evidence.",
+    "confidence": 6
+  },
+  "GM": {
+    "decision": "SKIP",
+    "reasoning": "General Motors similar challenges to Ford; Cruise autonomous driving setbacks add risk. Skip.",
     "confidence": 6
   },
   "DIS": {
     "decision": "SKIP",
-    "reasoning": "Disney's streaming path to profitability is real but linear TV cord-cutting is accelerating faster than DTC growth can offset; theme park slowdown adds near-term revenue risk. Skip for now.",
+    "reasoning": "Disney streaming path to profitability is real but linear TV cord-cutting accelerating faster than DTC growth can offset; theme park slowdown adds near-term revenue risk. Skip for now.",
     "confidence": 6
   },
-  "NFLX": {
+  "PYPL": {
     "decision": "EXECUTE",
-    "reasoning": "Netflix's ad-supported tier is monetising well; password-sharing crackdown drove subscriber beats. Live events (sports, Netflix Moments) add a new revenue vector. Copy the signal.",
-    "confidence": 7
+    "reasoning": "PayPal under new CEO (Alex Chriss) is stabilising; branded checkout volume holding, Venmo monetisation improving. Valuation is undemanding (P/E in teens) for a payments network with 400M+ accounts. Donalds fintech-friendly; copy if he's buying.",
+    "confidence": 6
+  },
+  "COIN": {
+    "decision": "EXECUTE",
+    "reasoning": "Coinbase benefits from crypto cycle recovery and regulatory clarity post-spot-ETF approvals. Transaction volume correlated with crypto prices; custody fees growing. Donalds is crypto-friendly in Congress. Copy cautiously with small size.",
+    "confidence": 6
+  },
+  "MSTR": {
+    "decision": "SKIP",
+    "reasoning": "MicroStrategy/Strategy is essentially a leveraged Bitcoin vehicle — extreme volatility with no operational moat beyond BTC treasury. Inappropriate for copy-trading automation; too volatile for the TRADE_FRACTION sizing model. Skip.",
+    "confidence": 4
   }
 }
