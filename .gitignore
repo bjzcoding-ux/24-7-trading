@@ -15,6 +15,7 @@ logs/
 *.log
 .DS_Store
 
-# Runtime research files (regenerated each session by Claude agent)
+# Runtime files (regenerated each session by Claude agent — never commit)
 research/analysis.json
 research/raw_trades.json
+journal/
