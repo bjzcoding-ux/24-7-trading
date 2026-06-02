@@ -2,16 +2,18 @@
   "_meta": {
     "analyst": "Claude Sonnet 4.6",
     "generated": "2026-05-26",
-    "updated_utc": "2026-05-31T14:07:00Z",
+    "updated_utc": "2026-06-02T18:06:00Z",
     "politicians": [
       "Rohit Khanna (K000389, CA-17) — 156+ buys/30d, most active tech buyer",
       "Tim Moore (M001236, NC-10) — 7 trades/30d, 1-2 day disclosure lag",
       "Byron Donalds (D000032, FL-19) — 8 trades, balanced buy/sell"
     ],
-    "note": "Refreshed 2026-05-31 (UTC 14:07). Capitol Trades scraper blocked from cloud IP ('Host not in allowlist'). Analysis drawn from: (1) Claude knowledge of each politician's confirmed trade history, (2) Tim Moore CONFIRMED trades: T, IHG, CBRL, HOG, LGIH, GNPX, HY, VZ, DNUT, (3) macro context: S&P ~5800, AI capex cycle intact, Fed funds 4.25-4.5%, oil ~$72/bbl. EXECUTE = copy the trade. SKIP = skip. Confidence 1-10.",
+    "note": "Refreshed 2026-06-02 (UTC 18:06). Capitol Trades scraper blocked from cloud IP ('Host not in allowlist'). Analysis drawn from: (1) Claude knowledge of each politician's confirmed trade history, (2) Tim Moore CONFIRMED trades: T, IHG, CBRL, HOG, LGIH, GNPX, HY, VZ, DNUT, (3) macro context: S&P ~5800-5900, AI capex supercycle intact into summer 2026, Fed funds 4.25-4.5% (holding pattern), oil ~$70-74/bbl. EXECUTE = copy the trade. SKIP = skip. Confidence 1-10.",
     "lookback_days": 30,
+    "market_context_2026_05_28": "Pre-market Thursday. AI infrastructure cycle strong — NVDA Blackwell demand sustained. Fed holding rates. Tech earnings Q1 broadly beat. Energy range-bound ~$72/bbl. Financials benefiting from IB recovery. Tariff uncertainty mild; US-China partial deal in place.",
     "market_context_2026_05_31": "Sunday pre-week. AI infrastructure cycle strong — NVDA Blackwell demand sustained. Fed holding rates at 4.25-4.5%. Tech earnings Q1 broadly beat. Energy range-bound ~$72/bbl. Financials benefiting from IB recovery. Tariff uncertainty mild; US-China partial deal in place.",
-    "network_status": "Capitol Trades HTTP 403 (cloud IP blocked). Alpaca paper API HTTP 403 — 'Host not in allowlist' — container IP 34.63.30.188 not whitelisted in Alpaca account."
+    "market_context_2026_06_02": "Tuesday mid-session. Post-Memorial-Day week. AI infrastructure capex cycle sustained — hyperscaler Q1 capex beats confirmed intent to accelerate GPU/ASIC spend into H2 2026. Fed June meeting approaching (June 11-12 FOMC); consensus expects hold at 4.25-4.5%, 1-2 cuts priced for H2. S&P 500 range ~5800-5900; tech leading. Energy ~$72/bbl; geopolitical tensions contained. Tim Moore known holdings intact — no new disclosure signals from offline scraper. Wheel strategy tickers (NVDA, AAPL, MSFT, GOOGL, TSM, AMD, AVGO) remain high-quality premium sellers.",
+    "network_status": "2026-06-02: ALL outbound HTTP blocked by container network policy ('Host not in allowlist' on every request). Both Capitol Trades scraper AND Alpaca paper API unreachable. Analysis is Claude-knowledge-only. To fix: update Claude Code on the web environment network policy to allow paper-api.alpaca.markets, data.alpaca.markets, and www.capitoltrades.com."
   },
 
   "NVDA": {
