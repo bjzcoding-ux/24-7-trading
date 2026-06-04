@@ -15,10 +15,21 @@
     "market_context_2026_06_02": "Tuesday mid-session. Post-Memorial-Day week. AI infrastructure capex cycle sustained — hyperscaler Q1 capex beats confirmed intent to accelerate GPU/ASIC spend into H2 2026. Fed June meeting approaching (June 11-12 FOMC); consensus expects hold at 4.25-4.5%, 1-2 cuts priced for H2. S&P 500 range ~5800-5900; tech leading. Energy ~$72/bbl; geopolitical tensions contained.",
     "market_context_2026_06_03": "Wednesday midday. FOMC meeting June 11-12 approaching — market consensus: hold at 4.25-4.5%, with 1-2 cuts penciled for H2 2026. AI infrastructure capex supercycle intact — NVDA Blackwell (GB200 NVL72) demand backlogged into Q3 2026. S&P ~5850-5900; Nasdaq leading on AI tailwinds. Oil ~$71-73/bbl (OPEC+ production discipline holding). US-China partial trade deal in effect. Earnings season Q1 largely complete with broad tech beats. ISM Services strong; labor market softening modestly. Dollar slightly weaker on rate-cut expectations. No major geopolitical shocks. Homebuilders benefiting from housing undersupply despite rates.",
     "market_context_2026_06_03_eod": "Wednesday end-of-day (UTC 20:00). Market closed. FOMC June 11-12 still the key near-term catalyst — expect hold. AI theme sustained with NVDA GB200 NVL72 backlog intact. S&P 500 range-bound ~5850-5900. No major macro shocks today. Wheel premium opportunities elevated with VIX in 15-18 range. Journal + main cycle running now.",
-    "network_status": "2026-06-03 UTC 20:00: Alpaca paper API returns 403 'Host not in allowlist' — server IP must be whitelisted at app.alpaca.markets under Paper Trading > API Keys. Capitol Trades scraper also returns 403 from cloud IP. Analysis is Claude-knowledge-only until IP is whitelisted. No trades can execute until Alpaca allowlist is updated.",
-    "last_updated": "2026-06-03T20:00:00Z"
+    "network_status": "2026-06-04 UTC 16:00: Alpaca paper API returns 403 'Host not in allowlist' — server IP must be whitelisted at app.alpaca.markets under Paper Trading > API Keys. Capitol Trades scraper also returns 403 from cloud IP. Analysis is Claude-knowledge-only until IP is whitelisted. No trades can execute until Alpaca allowlist is updated.",
+    "last_updated": "2026-06-04T16:00:00Z",
+    "market_context_2026_06_04": "Thursday midday. FOMC June 11-12 one week out — market expects hold at 4.25-4.5%; first cut priced for September 2026. AI infrastructure capex cycle intact: NVDA GB200/Blackwell demand backlogged into Q3; MRVL custom ASIC momentum confirmed by Jensen Huang comments. S&P 500 ~5850-5900. Byron Donalds' April 2 buys of MRVL + LLY filed May 16 are within the 30-day lookback window. Tim Moore's March 2026 trades are now outside the 30-day window (cutoff May 5). Rohit Khanna's FDS (FactSet) buy filed Jun 1 is within window. VIX ~15-17: wheel premium opportunities moderate-to-attractive."
   },
 
+  "MRVL": {
+    "decision": "EXECUTE",
+    "reasoning": "Byron Donalds bought MRVL April 2, 2026 (filed May 16 — WITHIN 30-day lookback window as of Jun 4). Marvell Technology designs custom AI ASICs for Google and Amazon, plus high-speed networking silicon for AI cluster interconnects. Jensen Huang publicly highlighted Marvell as a key partner in the custom AI silicon ecosystem. Revenue from data center grew 98% YoY in last quarter. Stock has strong institutional momentum. High-conviction execute.",
+    "confidence": 8
+  },
+  "SMPL": {
+    "decision": "EXECUTE",
+    "reasoning": "Simply Good Foods (Atkins, Quest brands) — Tim Moore bought March 12-13, 2026. GLP-1 drug adoption is a net tailwind: patients on Ozempic/Wegovy are advised to eat high-protein to preserve muscle mass, directly benefiting Quest protein bars. Clean label, low-carb positioning aligns with health-consumer megatrend. Reasonable valuation (~20x earnings). Execute.",
+    "confidence": 6
+  },
   "NVDA": {
     "decision": "EXECUTE",
     "reasoning": "NVIDIA is the structural backbone of AI infrastructure — H100/H200/GB200 demand remains constrained relative to hyperscaler appetite. Data-center segment growing 400%+ YoY. Khanna's highest-conviction holding. Any dip is a buying opportunity.",
